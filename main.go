@@ -13,10 +13,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 type VideoInfo struct {
@@ -41,26 +43,51 @@ type AuthResponse struct {
 
 var dynamoClient *dynamodb.Client
 var tableName string
+var httpAdapter *httpadapter.HandlerAdapter
 
-func main() {
+func init() {
 	// Initialize DynamoDB client
 	initDynamoDB()
 
+	// Create HTTP mux
+	mux := http.NewServeMux()
+
 	// Serve static files (HTML frontend)
-	http.HandleFunc("/", serveIndex)
+	mux.HandleFunc("/", serveIndex)
 
 	// Auth endpoint (no auth required)
-	http.HandleFunc("/api/auth", handleAuth)
+	mux.HandleFunc("/api/auth", handleAuth)
 
 	// API endpoint to get video info (auth required)
-	http.HandleFunc("/api/info", withAuth(handleVideoInfo))
+	mux.HandleFunc("/api/info", withAuth(handleVideoInfo))
 
 	// API endpoint to stream video (auth required)
-	http.HandleFunc("/api/stream", withAuth(handleStream))
+	mux.HandleFunc("/api/stream", withAuth(handleStream))
 
-	port := ":8080"
-	log.Printf("Server starting on http://localhost%s", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	// Create Lambda adapter
+	httpAdapter = httpadapter.New(mux)
+}
+
+func main() {
+	// Check if running in Lambda environment
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		// Running in Lambda
+		lambda.Start(httpAdapter.ProxyWithContext)
+	} else {
+		// Running locally
+		log.Printf("Running in local mode")
+
+		// Create HTTP mux for local server
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", serveIndex)
+		mux.HandleFunc("/api/auth", handleAuth)
+		mux.HandleFunc("/api/info", withAuth(handleVideoInfo))
+		mux.HandleFunc("/api/stream", withAuth(handleStream))
+
+		port := ":8080"
+		log.Printf("Server starting on http://localhost%s", port)
+		log.Fatal(http.ListenAndServe(port, mux))
+	}
 }
 
 func initDynamoDB() {

@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.25-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
@@ -13,28 +13,28 @@ RUN go mod download
 COPY *.go ./
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o instastream .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o instastream .
 
-# Runtime stage
-FROM python:3.11-slim
+# Runtime stage - use Amazon Linux 2 for Lambda compatibility
+FROM public.ecr.aws/lambda/python:3.11
 
-WORKDIR /app
+# Install dependencies including tar and xz for extracting ffmpeg
+RUN yum install -y tar xz && \
+    pip install --no-cache-dir yt-dlp
 
-# Install yt-dlp and ffmpeg (for some video formats)
-RUN pip install --no-cache-dir yt-dlp && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install ffmpeg from static build
+RUN curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o /tmp/ffmpeg.tar.xz && \
+    tar -xf /tmp/ffmpeg.tar.xz -C /tmp && \
+    cp /tmp/ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ && \
+    cp /tmp/ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ && \
+    rm -rf /tmp/ffmpeg* && \
+    yum clean all
 
 # Copy the Go binary from builder
-COPY --from=builder /app/instastream .
+COPY --from=builder /app/instastream ${LAMBDA_TASK_ROOT}/
 
 # Copy static files
-COPY static/ ./static/
+COPY static/ ${LAMBDA_TASK_ROOT}/static/
 
-# Expose port
-EXPOSE 8080
-
-# Run the server
-CMD ["./instastream"]
+# Set the entrypoint to our Go binary
+ENTRYPOINT [ "./instastream" ]
