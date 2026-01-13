@@ -1,0 +1,7 @@
+# Secrets and config
+.env
+deploy.conf
+
+# Binaries
+instastream
+*.exe

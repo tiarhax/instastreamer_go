@@ -1,0 +1,12 @@
+# Docker Hub Configuration
+DOCKER_USERNAME=your_dockerhub_username
+DOCKER_IMAGE_NAME=instastream
+DOCKER_TAG=latest
+
+# Optional: Docker Hub access token (recommended over password)
+# Generate at: https://hub.docker.com/settings/security
+DOCKER_TOKEN=your_dockerhub_access_token
+
+# AWS Lambda Configuration
+AWS_REGION=us-east-1
+LAMBDA_FUNCTION_NAME=your_lambda_function_name

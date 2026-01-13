@@ -1,0 +1,9 @@
+README.md
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+deploy.conf
+deploy.sh
+iam-policy.json

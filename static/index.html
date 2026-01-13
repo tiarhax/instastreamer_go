@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Instagram Video Streamer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: -webkit-linear-gradient(315deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            padding: 20px;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            -webkit-border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            -webkit-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .welcome-name {
+            text-align: center;
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-wrap: nowrap;
+            flex-wrap: nowrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        input[type="text"] {
+            -webkit-box-flex: 1;
+            -webkit-flex: 1 1 auto;
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            -webkit-border-radius: 8px;
+            font-size: 16px;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-transition: border-color 0.2s;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .code-input {
+            text-align: center;
+            text-transform: uppercase;
+            font-family: monospace;
+            font-size: 24px;
+            letter-spacing: 4px;
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        button {
+            padding: 14px 28px;
+            background: -webkit-linear-gradient(315deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            -webkit-border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            -webkit-transform: translateY(-2px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            -webkit-box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            -webkit-transform: translateY(0);
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            -webkit-transform: none;
+            transform: none;
+        }
+
+        .auth-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: #999;
+            font-size: 12px;
+            padding: 8px;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            color: #c62828;
+            box-shadow: none;
+            -webkit-box-shadow: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            -webkit-border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .status.loading {
+            display: block;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .video-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .video-container.visible {
+            display: block;
+        }
+
+        video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            -webkit-border-radius: 12px;
+            background: #000;
+            -webkit-playsinline: true;
+        }
+
+        .video-title {
+            text-align: center;
+            margin-top: 12px;
+            color: #333;
+            font-weight: 500;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .download-btn {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            background: #2e7d32;
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+            -webkit-box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1976d2;
+            border-top-color: transparent;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+        }
+
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 24px 16px;
+                border-radius: 12px;
+                -webkit-border-radius: 12px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+                margin-bottom: 20px;
+            }
+
+            .input-group {
+                -webkit-flex-direction: column;
+                flex-direction: column;
+            }
+
+            input[type="text"] {
+                -webkit-flex: 1 1 auto;
+                flex: 1 1 auto;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                padding: 16px 28px;
+            }
+
+            .code-input {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="authScreen" class="container">
+        <h1>Instagram Video Streamer</h1>
+        <p class="subtitle">Enter your access code to continue</p>
+
+        <input type="text" id="codeInput" class="code-input" placeholder="XXX-XXX" maxlength="7" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+        
+        <div id="authStatus" class="status"></div>
+        
+        <button id="authBtn" class="auth-btn" type="button">Verify Code</button>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="appScreen" class="container hidden">
+        <h1>Instagram Video Streamer</h1>
+        <p class="subtitle">Stream Instagram videos directly to your browser — no server storage</p>
+        <p id="welcomeName" class="welcome-name"></p>
+
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Paste Instagram URL here..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button id="streamBtn" type="button">Stream</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="videoContainer" class="video-container">
+            <video id="videoPlayer" controls playsinline webkit-playsinline></video>
+            <p id="videoTitle" class="video-title"></p>
+            <button id="downloadBtn" class="download-btn" type="button">Download Video</button>
+        </div>
+
+        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+    </div>
+
+    <script>
+        var currentVideoUrl = '';
+        var currentTitle = '';
+        var authCode = '';
+        var userName = '';
+
+        // Auth functions
+        function getStoredAuth() {
+            try {
+                var stored = sessionStorage.getItem('instastream_auth');
+                if (stored) {
+                    var parsed = JSON.parse(stored);
+                    return parsed;
+                }
+            } catch (e) {
+                console.error('Failed to parse stored auth:', e);
+            }
+            return null;
+        }
+
+        function storeAuth(code, name) {
+            try {
+                sessionStorage.setItem('instastream_auth', JSON.stringify({ code: code, name: name }));
+            } catch (e) {
+                console.error('Failed to store auth:', e);
+            }
+        }
+
+        function clearAuth() {
+            try {
+                sessionStorage.removeItem('instastream_auth');
+            } catch (e) {
+                console.error('Failed to clear auth:', e);
+            }
+        }
+
+        function showAuthScreen() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+        }
+
+        function showAppScreen() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            if (userName) {
+                document.getElementById('welcomeName').textContent = 'Welcome, ' + userName;
+            }
+        }
+
+        function formatCodeInput(input) {
+            var value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 3) {
+                value = value.substring(0, 3) + '-' + value.substring(3, 6);
+            }
+            input.value = value;
+        }
+
+        async function verifyCode() {
+            var codeInput = document.getElementById('codeInput');
+            var authBtn = document.getElementById('authBtn');
+            var code = codeInput.value.trim().toUpperCase();
+
+            if (!code) {
+                showAuthStatus('Please enter your access code', 'error');
+                return;
+            }
+
+            // Validate format
+            var pattern = /^[A-Z0-9]{3}-[A-Z0-9]{3}$/;
+            if (!pattern.test(code)) {
+                showAuthStatus('Invalid code format. Expected: XXX-XXX', 'error');
+                return;
+            }
+
+            authBtn.disabled = true;
+            showAuthStatus('<span class="spinner"></span> Verifying...', 'loading');
+
+            try {
+                var response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                var result = await response.json();
+
+                if (result.valid) {
+                    authCode = code;
+                    userName = result.name || '';
+                    storeAuth(code, userName);
+                    showAuthStatus('Code verified!', 'success');
+                    setTimeout(function() {
+                        showAppScreen();
+                    }, 500);
+                } else {
+                    showAuthStatus(result.error || 'Invalid code', 'error');
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showAuthStatus('Failed to verify code. Please try again.', 'error');
+            } finally {
+                authBtn.disabled = false;
+            }
+        }
+
+        function showAuthStatus(message, type) {
+            var status = document.getElementById('authStatus');
+            status.innerHTML = message;
+            status.className = 'status ' + type;
+        }
+
+        function logout() {
+            clearAuth();
+            authCode = '';
+            userName = '';
+            document.getElementById('codeInput').value = '';
+            document.getElementById('authStatus').className = 'status';
+            showAuthScreen();
+        }
+
+        // Video streaming functions
+        async function streamVideo() {
+            var urlInput = document.getElementById('urlInput');
+            var videoContainer = document.getElementById('videoContainer');
+            var videoPlayer = document.getElementById('videoPlayer');
+            var videoTitle = document.getElementById('videoTitle');
+            var streamBtn = document.getElementById('streamBtn');
+
+            var instagramUrl = urlInput.value.trim();
+
+            if (!instagramUrl) {
+                showStatus('Please enter an Instagram URL', 'error');
+                return;
+            }
+
+            if (instagramUrl.indexOf('instagram.com') === -1) {
+                showStatus('Please enter a valid Instagram URL', 'error');
+                return;
+            }
+
+            videoContainer.classList.remove('visible');
+            streamBtn.disabled = true;
+            showStatus('<span class="spinner"></span> Fetching video info...', 'loading');
+
+            try {
+                var infoResponse = await fetch('/api/info', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Auth-Code': authCode
+                    },
+                    body: JSON.stringify({ url: instagramUrl })
+                });
+
+                if (infoResponse.status === 401) {
+                    showStatus('Session expired. Please login again.', 'error');
+                    logout();
+                    return;
+                }
+
+                if (!infoResponse.ok) {
+                    throw new Error('Failed to fetch video info');
+                }
+
+                var info = await infoResponse.json();
+                currentTitle = info.title || 'Instagram Video';
+
+                showStatus('<span class="spinner"></span> Streaming video...', 'loading');
+
+                currentVideoUrl = '/api/stream?url=' + encodeURIComponent(instagramUrl) + '&auth=' + encodeURIComponent(authCode);
+                videoPlayer.src = currentVideoUrl;
+                videoTitle.textContent = currentTitle;
+
+                videoPlayer.onloadeddata = function() {
+                    showStatus('Video loaded successfully!', 'success');
+                    videoContainer.classList.add('visible');
+                };
+
+                videoPlayer.onerror = function() {
+                    showStatus('Failed to load video. The video might be private or unavailable.', 'error');
+                };
+
+                videoPlayer.load();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('Failed to stream video. Please check the URL and try again.', 'error');
+            } finally {
+                streamBtn.disabled = false;
+            }
+        }
+
+        async function downloadVideo() {
+            if (!currentVideoUrl) return;
+
+            var downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Downloading...';
+
+            try {
+                var response = await fetch(currentVideoUrl);
+                var blob = await response.blob();
+                
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = currentTitle + '.mp4';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                
+                setTimeout(function() {
+                    a.click();
+                    setTimeout(function() {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }, 0);
+
+                downloadBtn.textContent = 'Downloaded!';
+                setTimeout(function() {
+                    downloadBtn.textContent = 'Download Video';
+                }, 2000);
+            } catch (error) {
+                console.error('Download error:', error);
+                downloadBtn.textContent = 'Download Failed';
+                setTimeout(function() {
+                    downloadBtn.textContent = 'Download Video';
+                }, 2000);
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+
+        function showStatus(message, type) {
+            var status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = 'status ' + type;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for stored auth
+            var storedAuth = getStoredAuth();
+            if (storedAuth && storedAuth.code) {
+                authCode = storedAuth.code;
+                userName = storedAuth.name || '';
+                showAppScreen();
+            } else {
+                showAuthScreen();
+            }
+
+            // Auth screen events
+            document.getElementById('authBtn').addEventListener('click', verifyCode);
+            document.getElementById('codeInput').addEventListener('input', function() {
+                formatCodeInput(this);
+            });
+            document.getElementById('codeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    verifyCode();
+                }
+            });
+
+            // App screen events
+            document.getElementById('streamBtn').addEventListener('click', streamVideo);
+            document.getElementById('downloadBtn').addEventListener('click', downloadVideo);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            document.getElementById('urlInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    streamVideo();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
