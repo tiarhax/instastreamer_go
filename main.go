@@ -253,18 +253,25 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleVideoInfo(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[handleVideoInfo] Request received: Method=%s, Path=%s", r.Method, r.URL.Path)
+
 	if r.Method != http.MethodPost {
+		log.Printf("[handleVideoInfo] Method not allowed: %s", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req StreamRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("[handleVideoInfo] Failed to decode request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	log.Printf("[handleVideoInfo] Request URL: %s", req.URL)
+
 	if req.URL == "" {
+		log.Printf("[handleVideoInfo] Empty URL provided")
 		http.Error(w, "URL is required", http.StatusBadRequest)
 		return
 	}
@@ -272,32 +279,47 @@ func handleVideoInfo(w http.ResponseWriter, r *http.Request) {
 	// Validate URL format
 	parsedURL, err := url.Parse(req.URL)
 	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+		log.Printf("[handleVideoInfo] Invalid URL format: %s, error: %v", req.URL, err)
 		http.Error(w, "Invalid URL format", http.StatusBadRequest)
 		return
 	}
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		log.Printf("[handleVideoInfo] Invalid scheme: %s", parsedURL.Scheme)
 		http.Error(w, "URL must use http or https scheme", http.StatusBadRequest)
 		return
 	}
 	if !strings.Contains(parsedURL.Host, "instagram.com") {
+		log.Printf("[handleVideoInfo] Not an Instagram URL: %s", parsedURL.Host)
 		http.Error(w, "URL must be an Instagram URL", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("[handleVideoInfo] URL validated, calling yt-dlp...")
 
 	// Use yt-dlp to get video info (JSON output)
 	cmd := exec.Command("yt-dlp", "-j", "--no-warnings", req.URL)
 	output, err := cmd.Output()
 	if err != nil {
-		log.Printf("yt-dlp error: %v", err)
+		// Get stderr for more details
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			log.Printf("[handleVideoInfo] yt-dlp stderr: %s", string(exitErr.Stderr))
+		}
+		log.Printf("[handleVideoInfo] yt-dlp error: %v", err)
 		http.Error(w, "Failed to get video info", http.StatusInternalServerError)
 		return
 	}
 
+	log.Printf("[handleVideoInfo] yt-dlp output length: %d bytes", len(output))
+
 	var info map[string]interface{}
 	if err := json.Unmarshal(output, &info); err != nil {
+		log.Printf("[handleVideoInfo] Failed to parse yt-dlp JSON: %v", err)
+		log.Printf("[handleVideoInfo] Raw output: %s", string(output[:min(len(output), 500)]))
 		http.Error(w, "Failed to parse video info", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("[handleVideoInfo] Successfully parsed video info")
 
 	// Extract the direct video URL
 	videoURL := ""
@@ -319,6 +341,8 @@ func handleVideoInfo(w http.ResponseWriter, r *http.Request) {
 		Title:     title,
 		Extension: ext,
 	}
+
+	log.Printf("[handleVideoInfo] Sending response: title=%s, ext=%s, url_length=%d", title, ext, len(videoURL))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
