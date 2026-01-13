@@ -347,3 +347,5 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Streamed %d bytes", written)
 }
+
+//trigger action
