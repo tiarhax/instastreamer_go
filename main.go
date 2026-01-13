@@ -238,7 +238,18 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	http.ServeFile(w, r, "static/index.html")
+
+	// Read the HTML file
+	content, err := os.ReadFile("static/index.html")
+	if err != nil {
+		log.Printf("Error reading index.html: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Explicitly set Content-Type for HTML
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(content)
 }
 
 func handleVideoInfo(w http.ResponseWriter, r *http.Request) {
