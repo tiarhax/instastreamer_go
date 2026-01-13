@@ -43,7 +43,7 @@ type AuthResponse struct {
 
 var dynamoClient *dynamodb.Client
 var tableName string
-var httpAdapter *httpadapter.HandlerAdapter
+var httpAdapter *httpadapter.HandlerAdapterV2
 
 func init() {
 	// Initialize DynamoDB client
@@ -64,8 +64,8 @@ func init() {
 	// API endpoint to stream video (auth required)
 	mux.HandleFunc("/api/stream", withAuth(handleStream))
 
-	// Create Lambda adapter
-	httpAdapter = httpadapter.New(mux)
+	// Create Lambda adapter for API Gateway HTTP API / Lambda Function URL
+	httpAdapter = httpadapter.NewV2(mux)
 }
 
 func main() {
